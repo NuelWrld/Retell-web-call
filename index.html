@@ -4,7 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OutreachAI — Call Console</title>
-<script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk@latest/dist/index.umd.js"></script>
+<script type="module">
+  import { RetellWebClient } from 'https://esm.sh/retell-client-js-sdk';
+
+  window.RetellWebClient = RetellWebClient;
+</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
 
@@ -509,7 +513,7 @@
     document.getElementById('mainBtn').disabled = true;
 
     try {
-      retellClient = new Retell.RetellWebClient();
+      retellClient = new RetellWebClient();
 
       retellClient.on('call_started', () => {
         callStart = Date.now();
