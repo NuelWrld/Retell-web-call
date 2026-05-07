@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OutreachAI — Call Console</title>
+<script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk@latest/dist/index.umd.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --accent: #00ff88;
+    --accent-dim: rgba(0,255,136,0.1);
+    --accent-mid: rgba(0,255,136,0.3);
+    --text: #e8e8f0;
+    --muted: #555566;
+    --danger: #ff4466;
+    --warning: #ffaa00;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -40%;
+    left: -20%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(0,255,136,0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -30%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(0,100,255,0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .console {
+    width: 100%;
+    max-width: 520px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header {
+    margin-bottom: 40px;
+  }
+
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .title {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1px;
+  }
+
+  .title span {
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .card-label {
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .input-group {
+    margin-bottom: 16px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus {
+    border-color: var(--accent);
+  }
+
+  input::placeholder {
+    color: var(--muted);
+  }
+
+  .btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+
+  .btn-primary:hover {
+    background: #00ffaa;
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:disabled {
+    background: var(--muted);
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    margin-top: 12px;
+  }
+
+  .btn-danger:hover {
+    background: rgba(255,68,102,0.1);
+  }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .status-idle .status-dot { background: var(--muted); }
+  .status-connecting .status-dot { background: var(--warning); animation: pulse 1s infinite; }
+  .status-active .status-dot { background: var(--accent); animation: pulse 1s infinite; }
+  .status-ended .status-dot { background: var(--danger); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .contact-info {
+    display: none;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-mid);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .contact-info.visible { display: block; }
+
+  .contact-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .contact-phone {
+    font-size: 12px;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .waveform {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 40px;
+    margin: 16px 0;
+  }
+
+  .waveform.active { display: flex; }
+
+  .wave-bar {
+    width: 3px;
+    background: var(--accent);
+    border-radius: 2px;
+    animation: wave 1.2s ease-in-out infinite;
+  }
+
+  .wave-bar:nth-child(1) { animation-delay: 0s; }
+  .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+  .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+  .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+  .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+  .wave-bar:nth-child(6) { animation-delay: 0.3s; }
+  .wave-bar:nth-child(7) { animation-delay: 0.2s; }
+  .wave-bar:nth-child(8) { animation-delay: 0.1s; }
+  .wave-bar:nth-child(9) { animation-delay: 0s; }
+
+  @keyframes wave {
+    0%, 100% { height: 6px; }
+    50% { height: 32px; }
+  }
+
+  .transcript {
+    display: none;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .transcript.visible { display: block; }
+
+  .transcript-line { margin-bottom: 6px; }
+  .transcript-line.agent { color: var(--accent); }
+  .transcript-line.user { color: var(--text); }
+
+  .transcript-line .speaker {
+    font-weight: 700;
+    margin-right: 8px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 0;
+  }
+
+  .fetch-btn {
+    width: 100%;
+    padding: 11px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+  }
+
+  .fetch-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .log {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .log .entry { display: flex; gap: 8px; }
+  .log .time { color: var(--accent); flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="console">
+  <div class="header">
+    <div class="logo">OutreachAI</div>
+    <h1 class="title">Call <span>Console</span></h1>
+    <p class="subtitle">// outbound agent test interface</p>
+  </div>
+
+  <!-- Config Card -->
+  <div class="card" id="configCard">
+    <div class="card-label">Configuration</div>
+    <div class="input-group">
+      <label>AIRTABLE API KEY</label>
+      <input type="password" id="airtableKey" placeholder="your airtable personal access token" />
+    </div>
+    <div class="input-group">
+      <label>BASE ID</label>
+      <input type="text" id="baseId" placeholder="appXXXXXXXXXXXXXX" />
+    </div>
+    <div class="input-group">
+      <label>TABLE NAME</label>
+      <input type="text" id="tableName" placeholder="Contacts" value="Contacts" />
+    </div>
+    <button class="fetch-btn" onclick="fetchLatestContact()">↓ Fetch Latest Contact</button>
+
+    <hr class="divider">
+
+    <div class="card-label">Or paste token directly</div>
+    <div class="input-group">
+      <label>ACCESS TOKEN</label>
+      <input type="text" id="manualToken" placeholder="paste retell access token here" />
+    </div>
+    <div class="input-group">
+      <label>CONTACT NAME (optional)</label>
+      <input type="text" id="manualName" placeholder="Customer name" />
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="status-bar status-idle" id="statusBar">
+    <div class="status-dot"></div>
+    <span id="statusText">Ready — configure and fetch contact or paste token</span>
+  </div>
+
+  <!-- Contact Info -->
+  <div class="contact-info" id="contactInfo">
+    <div class="contact-name" id="contactName">—</div>
+    <div class="contact-phone" id="contactPhone">—</div>
+  </div>
+
+  <!-- Waveform -->
+  <div class="waveform" id="waveform">
+    <div class="wave-bar" style="height:6px"></div>
+    <div class="wave-bar" style="height:6px"></div>
+    <div class="wave-bar" style="height:6px"></div>
+    <div class="wave-bar" style="height:6px"></div>
+    <div class="wave-bar" style="height:6px"></div>
+    <div class="wave-bar" style="height:6px"></div>
+    <div class="wave-bar" style="height:6px"></div>
+    <div class="wave-bar" style="height:6px"></div>
+    <div class="wave-bar" style="height:6px"></div>
+  </div>
+
+  <!-- Transcript -->
+  <div class="transcript" id="transcript"></div>
+
+  <!-- Main Button -->
+  <button class="btn btn-primary" id="mainBtn" onclick="startCall()">Start Call</button>
+  <button class="btn btn-danger" id="endBtn" onclick="endCall()" style="display:none">End Call</button>
+
+  <!-- Log -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-label">Activity Log</div>
+    <div class="log" id="log">
+      <div class="entry"><span class="time">[00:00]</span><span>System ready</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let retellClient = null;
+  let currentToken = null;
+  let callStart = null;
+
+  function addLog(msg) {
+    const log = document.getElementById('log');
+    const now = new Date();
+    const time = `${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    const entry = document.createElement('div');
+    entry.className = 'entry';
+    entry.innerHTML = `<span class="time">[${time}]</span><span>${msg}</span>`;
+    log.appendChild(entry);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function setStatus(type, text) {
+    const bar = document.getElementById('statusBar');
+    bar.className = `status-bar status-${type}`;
+    document.getElementById('statusText').textContent = text;
+  }
+
+  async function fetchLatestContact() {
+    const key = document.getElementById('airtableKey').value.trim();
+    const base = document.getElementById('baseId').value.trim();
+    const table = document.getElementById('tableName').value.trim();
+
+    if (!key || !base || !table) {
+      addLog('ERROR: Fill in all Airtable config fields');
+      return;
+    }
+
+    addLog('Fetching latest contact from Airtable...');
+
+    try {
+      const url = `https://api.airtable.com/v0/${base}/${encodeURIComponent(table)}?filterByFormula={Status}="Calling"&sort[0][field]=Created Time&sort[0][direction]=desc&maxRecords=1`;
+      const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${key}` }
+      });
+      const data = await res.json();
+
+      if (!data.records || data.records.length === 0) {
+        addLog('No contacts with status "Calling" found');
+        setStatus('idle', 'No active contacts found — add a contact to Airtable first');
+        return;
+      }
+
+      const record = data.records[0];
+      const fields = record.fields;
+      const token = fields['Access Token'];
+      const name = fields['Name'] || 'Unknown';
+      const phone = fields['Phone number'] || '—';
+
+      if (!token) {
+        addLog('ERROR: Contact has no access token — trigger call from n8n first');
+        return;
+      }
+
+      currentToken = token;
+      document.getElementById('contactName').textContent = name;
+      document.getElementById('contactPhone').textContent = phone;
+      document.getElementById('contactInfo').classList.add('visible');
+
+      addLog(`Contact loaded: ${name}`);
+      addLog('Access token retrieved — ready to join call');
+      setStatus('idle', `Ready to call ${name}`);
+
+    } catch (err) {
+      addLog(`ERROR: ${err.message}`);
+    }
+  }
+
+  async function startCall() {
+    const manualToken = document.getElementById('manualToken').value.trim();
+    const manualName = document.getElementById('manualName').value.trim();
+
+    if (manualToken) {
+      currentToken = manualToken;
+      if (manualName) {
+        document.getElementById('contactName').textContent = manualName;
+        document.getElementById('contactPhone').textContent = 'Manual entry';
+        document.getElementById('contactInfo').classList.add('visible');
+      }
+    }
+
+    if (!currentToken) {
+      addLog('ERROR: No access token — fetch contact or paste token manually');
+      return;
+    }
+
+    addLog('Initializing Retell web client...');
+    setStatus('connecting', 'Connecting to call...');
+    document.getElementById('mainBtn').disabled = true;
+
+    try {
+      retellClient = new RetellWebClient();
+
+      retellClient.on('call_started', () => {
+        callStart = Date.now();
+        addLog('Call started — you are now speaking as the customer');
+        setStatus('active', 'Call active — speak as the customer');
+        document.getElementById('waveform').classList.add('active');
+        document.getElementById('transcript').classList.add('visible');
+        document.getElementById('mainBtn').style.display = 'none';
+        document.getElementById('endBtn').style.display = 'block';
+      });
+
+      retellClient.on('call_ended', () => {
+        const duration = callStart ? Math.round((Date.now() - callStart) / 1000) : 0;
+        addLog(`Call ended — duration: ${duration}s`);
+        setStatus('ended', `Call ended after ${duration} seconds`);
+        document.getElementById('waveform').classList.remove('active');
+        document.getElementById('mainBtn').style.display = 'block';
+        document.getElementById('mainBtn').disabled = false;
+        document.getElementById('endBtn').style.display = 'none';
+        currentToken = null;
+      });
+
+      retellClient.on('agent_start_talking', () => {
+        addLog('Agent speaking...');
+      });
+
+      retellClient.on('update', (update) => {
+        if (update.transcript) {
+          const transcript = document.getElementById('transcript');
+          transcript.innerHTML = '';
+          update.transcript.forEach(line => {
+            const div = document.createElement('div');
+            div.className = `transcript-line ${line.role === 'agent' ? 'agent' : 'user'}`;
+            div.innerHTML = `<span class="speaker">${line.role === 'agent' ? 'SHOLA' : 'YOU'}:</span>${line.content}`;
+            transcript.appendChild(div);
+          });
+          transcript.scrollTop = transcript.scrollHeight;
+        }
+      });
+
+      await retellClient.startCall({ accessToken: currentToken });
+      addLog('Connected to Retell — waiting for agent...');
+
+    } catch (err) {
+      addLog(`ERROR: ${err.message}`);
+      setStatus('idle', 'Connection failed — check token and try again');
+      document.getElementById('mainBtn').disabled = false;
+    }
+  }
+
+  function endCall() {
+    if (retellClient) {
+      retellClient.stopCall();
+      retellClient = null;
+      addLog('Call terminated by user');
+    }
+  }
+</script>
+</body>
+</html>
