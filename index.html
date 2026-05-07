@@ -509,7 +509,7 @@
     document.getElementById('mainBtn').disabled = true;
 
     try {
-      retellClient = new RetellWebClient();
+      retellClient = new Retell.RetellWebClient();
 
       retellClient.on('call_started', () => {
         callStart = Date.now();
