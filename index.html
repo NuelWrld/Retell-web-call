@@ -22,19 +22,26 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    position: relative;
-    overflow: hidden;
-  }
+ body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  /* changed */
+  justify-content: flex-start;
+
+  padding: 24px;
+  position: relative;
+
+  /* changed */
+  overflow-x: hidden;
+  overflow-y: auto;
+}
 
   body::before {
     content: '';
@@ -63,6 +70,8 @@
     max-width: 520px;
     position: relative;
     z-index: 1;
+
+    margin: 40px 0;
   }
 
   .header {
@@ -331,6 +340,30 @@
 
   .log .entry { display: flex; gap: 8px; }
   .log .time { color: var(--accent); flex-shrink: 0; }
+
+  @media (max-width: 600px) {
+  body {
+    padding: 14px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+  input,
+  .btn,
+  .fetch-btn {
+    font-size: 14px;
+  }
+
+  .transcript {
+    max-height: 160px;
+  }
+}
 </style>
 </head>
 <body>
