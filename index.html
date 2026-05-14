@@ -22,26 +22,20 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
- body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Syne', sans-serif;
-  min-height: 100vh;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  /* changed */
-  justify-content: flex-start;
-
-  padding: 24px;
-  position: relative;
-
-  /* changed */
-  overflow-x: hidden;
-  overflow-y: auto;
-}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 24px;
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
 
   body::before {
     content: '';
@@ -70,7 +64,6 @@
     max-width: 520px;
     position: relative;
     z-index: 1;
-
     margin: 40px 0;
   }
 
@@ -120,39 +113,6 @@
     letter-spacing: 3px;
     text-transform: uppercase;
     margin-bottom: 16px;
-  }
-
-  .input-group {
-    margin-bottom: 16px;
-  }
-
-  label {
-    display: block;
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 8px;
-    font-family: 'Space Mono', monospace;
-  }
-
-  input {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-    font-size: 12px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  input:focus {
-    border-color: var(--accent);
-  }
-
-  input::placeholder {
-    color: var(--muted);
   }
 
   .btn {
@@ -224,6 +184,24 @@
     50% { opacity: 0.3; }
   }
 
+  /* No-token fallback state */
+  .no-token-msg {
+    display: none;
+    text-align: center;
+    padding: 40px 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .no-token-msg .icon {
+    font-size: 32px;
+    margin-bottom: 16px;
+  }
+
+  .no-token-msg.visible { display: block; }
+
   .contact-info {
     display: none;
     background: var(--accent-dim);
@@ -241,7 +219,7 @@
     margin-bottom: 4px;
   }
 
-  .contact-phone {
+  .contact-detail {
     font-size: 12px;
     color: var(--accent);
     font-family: 'Space Mono', monospace;
@@ -305,32 +283,6 @@
     margin-right: 8px;
   }
 
-  .divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 16px 0;
-  }
-
-  .fetch-btn {
-    width: 100%;
-    padding: 11px;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-bottom: 16px;
-  }
-
-  .fetch-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
   .log {
     font-family: 'Space Mono', monospace;
     font-size: 10px;
@@ -342,28 +294,12 @@
   .log .time { color: var(--accent); flex-shrink: 0; }
 
   @media (max-width: 600px) {
-  body {
-    padding: 14px;
+    body { padding: 14px; }
+    .title { font-size: 26px; }
+    .card { padding: 18px; }
+    .btn { font-size: 14px; }
+    .transcript { max-height: 160px; }
   }
-
-  .title {
-    font-size: 26px;
-  }
-
-  .card {
-    padding: 18px;
-  }
-
-  input,
-  .btn,
-  .fetch-btn {
-    font-size: 14px;
-  }
-
-  .transcript {
-    max-height: 160px;
-  }
-}
 </style>
 </head>
 <body>
@@ -372,49 +308,26 @@
   <div class="header">
     <div class="logo">OutreachAI</div>
     <h1 class="title">Call <span>Console</span></h1>
-    <p class="subtitle">// outbound agent test interface</p>
+    <p class="subtitle">// outbound agent interface</p>
   </div>
 
-  <!-- Config Card -->
-  <div class="card" id="configCard">
-    <div class="card-label">Configuration</div>
-    <div class="input-group">
-      <label>AIRTABLE API KEY</label>
-      <input type="password" id="airtableKey" placeholder="your airtable personal access token" />
-    </div>
-    <div class="input-group">
-      <label>BASE ID</label>
-      <input type="text" id="baseId" placeholder="appXXXXXXXXXXXXXX" />
-    </div>
-    <div class="input-group">
-      <label>TABLE NAME</label>
-      <input type="text" id="tableName" placeholder="Contacts" value="Contacts" />
-    </div>
-    <button class="fetch-btn" onclick="fetchLatestContact()">↓ Fetch Latest Contact</button>
-
-    <hr class="divider">
-
-    <div class="card-label">Or paste token directly</div>
-    <div class="input-group">
-      <label>ACCESS TOKEN</label>
-      <input type="text" id="manualToken" placeholder="paste retell access token here" />
-    </div>
-    <div class="input-group">
-      <label>CONTACT NAME (optional)</label>
-      <input type="text" id="manualName" placeholder="Customer name" />
-    </div>
+  <!-- No-token fallback -->
+  <div class="no-token-msg" id="noTokenMsg">
+    <div class="icon">🔗</div>
+    No call token found in URL.<br>
+    Open this page using the link sent to Telegram.
   </div>
 
   <!-- Status -->
   <div class="status-bar status-idle" id="statusBar">
     <div class="status-dot"></div>
-    <span id="statusText">Ready — configure and fetch contact or paste token</span>
+    <span id="statusText">Initializing...</span>
   </div>
 
-  <!-- Contact Info -->
+  <!-- Contact Info (shown when token carries name/phone via URL params) -->
   <div class="contact-info" id="contactInfo">
     <div class="contact-name" id="contactName">—</div>
-    <div class="contact-phone" id="contactPhone">—</div>
+    <div class="contact-detail" id="contactDetail">—</div>
   </div>
 
   <!-- Waveform -->
@@ -433,8 +346,8 @@
   <!-- Transcript -->
   <div class="transcript" id="transcript"></div>
 
-  <!-- Main Button -->
-  <button class="btn btn-primary" id="mainBtn" onclick="startCall()">Start Call</button>
+  <!-- Buttons -->
+  <button class="btn btn-primary" id="mainBtn" onclick="startCall()" style="display:none">Join Call</button>
   <button class="btn btn-danger" id="endBtn" onclick="endCall()" style="display:none">End Call</button>
 
   <!-- Log -->
@@ -448,7 +361,7 @@
 
 <script type="module">
   import { RetellWebClient } from 'https://esm.sh/retell-client-js-sdk';
-  
+
   let retellClient = null;
   let currentToken = null;
   let callStart = null;
@@ -470,71 +383,9 @@
     document.getElementById('statusText').textContent = text;
   }
 
-  async function fetchLatestContact() {
-    const key = document.getElementById('airtableKey').value.trim();
-    const base = document.getElementById('baseId').value.trim();
-    const table = document.getElementById('tableName').value.trim();
-
-    if (!key || !base || !table) {
-      addLog('ERROR: Fill in all Airtable config fields');
-      return;
-    }
-
-    addLog('Fetching latest contact from Airtable...');
-
-    try {
-      const url = `https://api.airtable.com/v0/${base}/${encodeURIComponent(table)}?filterByFormula={Status}="Calling"&sort[0][field]=Created Time&sort[0][direction]=desc&maxRecords=1`;
-      const res = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${key}` }
-      });
-      const data = await res.json();
-
-      if (!data.records || data.records.length === 0) {
-        addLog('No contacts with status "Calling" found');
-        setStatus('idle', 'No active contacts found — add a contact to Airtable first');
-        return;
-      }
-
-      const record = data.records[0];
-      const fields = record.fields;
-      const token = fields['Access Token'];
-      const name = fields['Name'] || 'Unknown';
-      const phone = fields['Phone number'] || '—';
-
-      if (!token) {
-        addLog('ERROR: Contact has no access token — trigger call from n8n first');
-        return;
-      }
-
-      currentToken = token;
-      document.getElementById('contactName').textContent = name;
-      document.getElementById('contactPhone').textContent = phone;
-      document.getElementById('contactInfo').classList.add('visible');
-
-      addLog(`Contact loaded: ${name}`);
-      addLog('Access token retrieved — ready to join call');
-      setStatus('idle', `Ready to call ${name}`);
-
-    } catch (err) {
-      addLog(`ERROR: ${err.message}`);
-    }
-  }
-
   async function startCall() {
-    const manualToken = document.getElementById('manualToken').value.trim();
-    const manualName = document.getElementById('manualName').value.trim();
-
-    if (manualToken) {
-      currentToken = manualToken;
-      if (manualName) {
-        document.getElementById('contactName').textContent = manualName;
-        document.getElementById('contactPhone').textContent = 'Manual entry';
-        document.getElementById('contactInfo').classList.add('visible');
-      }
-    }
-
     if (!currentToken) {
-      addLog('ERROR: No access token — fetch contact or paste token manually');
+      addLog('ERROR: No access token available');
       return;
     }
 
@@ -560,8 +411,6 @@
         addLog(`Call ended — duration: ${duration}s`);
         setStatus('ended', `Call ended after ${duration} seconds`);
         document.getElementById('waveform').classList.remove('active');
-        document.getElementById('mainBtn').style.display = 'block';
-        document.getElementById('mainBtn').disabled = false;
         document.getElementById('endBtn').style.display = 'none';
         currentToken = null;
       });
@@ -577,7 +426,7 @@
           update.transcript.forEach(line => {
             const div = document.createElement('div');
             div.className = `transcript-line ${line.role === 'agent' ? 'agent' : 'user'}`;
-            div.innerHTML = `<span class="speaker">${line.role === 'agent' ? 'SHOLA' : 'YOU'}:</span>${line.content}`;
+            div.innerHTML = `<span class="speaker">${line.role === 'agent' ? 'AGENT' : 'YOU'}:</span>${line.content}`;
             transcript.appendChild(div);
           });
           transcript.scrollTop = transcript.scrollHeight;
@@ -591,6 +440,7 @@
       addLog(`ERROR: ${err.message}`);
       setStatus('idle', 'Connection failed — check token and try again');
       document.getElementById('mainBtn').disabled = false;
+      document.getElementById('mainBtn').style.display = 'block';
     }
   }
 
@@ -602,7 +452,35 @@
     }
   }
 
-  window.fetchLatestContact = fetchLatestContact;
+  // ── Boot: extract token + optional metadata from URL ──────────────────────
+  window.addEventListener('load', async () => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    const name  = params.get('name');
+    const phone = params.get('phone');
+
+    if (!token) {
+      document.getElementById('noTokenMsg').classList.add('visible');
+      setStatus('idle', 'No token — open the Telegram link to join');
+      addLog('No token found in URL');
+      return;
+    }
+
+    currentToken = token;
+    addLog('Access token detected from URL');
+
+    // Show contact card if name/phone were passed as extra params
+    if (name || phone) {
+      document.getElementById('contactName').textContent = name || 'Unknown';
+      document.getElementById('contactDetail').textContent = phone || '';
+      document.getElementById('contactInfo').classList.add('visible');
+    }
+
+    setStatus('connecting', 'Token found — joining call...');
+    addLog('Auto-starting call...');
+    await startCall();
+  });
+
   window.startCall = startCall;
   window.endCall = endCall;
 </script>
